@@ -3,9 +3,9 @@ import {
     COLLECTIONS_KEY,
     SUBS_KEY,
     FILES_KEY,
-} from '@/constants';
-import $ from '@/core/app';
-import { success } from '@/restful/response';
+} from '../constants';
+import $ from '../core/app';
+import { success } from './response';
 
 export default function register($app) {
     $app.post('/api/sort/subs', sortSubs);
