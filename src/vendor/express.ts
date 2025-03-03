@@ -1,14 +1,41 @@
 /* eslint-disable no-undef */
+import { ENV } from './open-api';
 
-export default function express({ substore: $, port }) {
-    port = port || 3000;
+export default function express({ substore: $, port, host }) {
+    const { isNode } = ENV();
     const DEFAULT_HEADERS = {
         'Content-Type': 'text/plain;charset=UTF-8',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PATCH,PUT,DELETE',
         'Access-Control-Allow-Headers':
             'Origin, X-Requested-With, Content-Type, Accept',
+        'X-Powered-By': 'Sub-Store',
     };
+
+    // node support
+    if (isNode) {
+        const express_ = eval(`require("express")`);
+        const bodyParser = eval(`require("body-parser")`);
+        const app = express_();
+        app.use(bodyParser.json({ verify: rawBodySaver, limit: '1mb' }));
+        app.use(
+            bodyParser.urlencoded({ verify: rawBodySaver, extended: true }),
+        );
+        app.use(bodyParser.raw({ verify: rawBodySaver, type: '*/*' }));
+        app.use((_, res, next) => {
+            res.set(DEFAULT_HEADERS);
+            next();
+        });
+
+        // adapter
+        app.start = () => {
+            const listener = app.listen(port, host, () => {
+                const { address, port } = listener.address();
+                $.info(`[BACKEND] ${address}:${port}`);
+            });
+        };
+        return app;
+    }
 
     // route handlers
     const handlers = [];
@@ -135,6 +162,7 @@ export default function express({ substore: $, port }) {
 
     function Response() {
         let statusCode = 200;
+        const { isQX, isLoon, isSurge, isGUIforCores } = ENV();
         const headers = DEFAULT_HEADERS;
         const STATUS_CODE_MAP = {
             200: 'HTTP/1.1 200 OK',
@@ -157,7 +185,7 @@ export default function express({ substore: $, port }) {
                     body,
                     headers,
                 };
-                if (isQX) {
+                if (isQX || isGUIforCores) {
                     $done(response);
                 } else if (isLoon || isSurge) {
                     $done({
