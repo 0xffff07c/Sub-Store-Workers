@@ -1,9 +1,9 @@
-import { SETTINGS_KEY } from '@/constants';
-import { HTTP, ENV } from '@/vendor/open-api';
-import { hex_md5 } from '@/vendor/md5';
-import { getPolicyDescriptor } from '@/utils';
-import $ from '@/core/app';
-import headersResourceCache from '@/utils/headers-resource-cache';
+import { SETTINGS_KEY } from '../constants';
+import { HTTP, ENV } from '../vendor/open-api';
+import { hex_md5 } from '../vendor/md5';
+import { getPolicyDescriptor } from '../utils';
+import $ from '../core/app';
+import headersResourceCache from '../utils/headers-resource-cache';
 
 export function getFlowField(headers) {
     const keys = Object.keys(headers);
