@@ -1,9 +1,9 @@
-import { deleteByName, findByName, updateByName } from '@/utils/database';
-import { MODULES_KEY } from '@/constants';
-import { failed, success } from '@/restful/response';
-import $ from '@/core/app';
-import { RequestInvalidError, ResourceNotFoundError } from '@/restful/errors';
-import { hex_md5 } from '@/vendor/md5';
+import { deleteByName, findByName, updateByName } from '../utils/database';
+import { MODULES_KEY } from '../constants';
+import { failed, success } from './response';
+import $ from '../core/app';
+import { RequestInvalidError, ResourceNotFoundError } from './errors';
+import { hex_md5 } from '../vendor/md5';
 
 export default function register($app) {
     if (!$.read(MODULES_KEY)) $.write([], MODULES_KEY);
