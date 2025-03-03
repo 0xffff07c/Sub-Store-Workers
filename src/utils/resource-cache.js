@@ -1,65 +1,52 @@
-import $ from '@/core/app';
-import { CACHE_EXPIRATION_TIME_MS, RESOURCE_CACHE_KEY } from '@/constants';
+import { CACHE_EXPIRATION_TIME_MS, RESOURCE_CACHE_KEY } from '../constants';
+import { DB } from '../db';
 
 class ResourceCache {
-    constructor(expires) {
+    expires: number;
+
+    constructor(expires: number) {
         this.expires = expires;
-        if (!$.read(RESOURCE_CACHE_KEY)) {
-            $.write('{}', RESOURCE_CACHE_KEY);
-        }
-        try {
-            this.resourceCache = JSON.parse($.read(RESOURCE_CACHE_KEY));
-        } catch (e) {
-            $.error(
-                `解析持久化缓存中的 ${RESOURCE_CACHE_KEY} 失败, 重置为 {}, 错误: ${
-                    e?.message ?? e
-                }`,
-            );
-            this.resourceCache = {};
-            $.write('{}', RESOURCE_CACHE_KEY);
-        }
-        this._cleanup();
-    }
-
-    _cleanup() {
-        // clear obsolete cached resource
-        let clear = false;
-        Object.entries(this.resourceCache).forEach((entry) => {
-            const [id, updated] = entry;
-            if (!updated.time) {
-                // clear old version cache
-                delete this.resourceCache[id];
-                $.delete(`#${id}`);
-                clear = true;
-            }
-            if (new Date().getTime() - updated.time > this.expires) {
-                delete this.resourceCache[id];
-                clear = true;
-            }
+        this.cleanup().catch((err) => {
+            console.error('ResourceCache initialization cleanup failed:', err);
         });
-        if (clear) this._persist();
     }
 
-    revokeAll() {
-        this.resourceCache = {};
-        this._persist();
+    private async cleanup(): Promise<void> {
+        const cutoffTime = new Date().getTime() - this.expires;
+        await DB
+            .deleteFrom(RESOURCE_CACHE_KEY)
+            .where('time', '<=', cutoffTime)
+            .execute();
     }
 
-    _persist() {
-        $.write(JSON.stringify(this.resourceCache), RESOURCE_CACHE_KEY);
+    async revokeAll(): Promise<void> {
+        await DB
+            .deleteFrom(RESOURCE_CACHE_KEY)
+            .execute();
     }
 
-    get(id) {
-        const updated = this.resourceCache[id] && this.resourceCache[id].time;
-        if (updated && new Date().getTime() - updated <= this.expires) {
-            return this.resourceCache[id].data;
-        }
-        return null;
+    async get(key: string): Promise<any> {
+        const cutoffTime = new Date().getTime() - this.expires;
+        const result = await DB
+            .selectFrom(RESOURCE_CACHE_KEY)
+            .selectAll()
+            .where('key', '=', key)
+            .where('time', '>', cutoffTime)
+            .executeTakeFirst();
+        
+        return result ? JSON.parse(result.data) : null;
     }
 
-    set(id, value) {
-        this.resourceCache[id] = { time: new Date().getTime(), data: value };
-        this._persist();
+    async set(key: string, data: any): Promise<void> {
+        const time = new Date().getTime();
+        const dataString = JSON.stringify(data);
+        await DB
+            .insertInto(RESOURCE_CACHE_KEY)
+            .values({ key, data: dataString, time })
+            .onConflict((oc) => 
+                oc.column('key').doUpdateSet({ data: dataString, time })
+            )
+            .execute();
     }
 }
 
