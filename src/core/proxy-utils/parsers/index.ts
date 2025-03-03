@@ -6,12 +6,12 @@ import {
     isNotBlank,
     getIfPresent,
     getRandomPort,
-} from '@/utils';
+} from '../utils';
 import getSurgeParser from './peggy/surge';
 import getLoonParser from './peggy/loon';
 import getQXParser from './peggy/qx';
 import getTrojanURIParser from './peggy/trojan-uri';
-import $ from '@/core/app';
+import $ from '../core/app';
 
 import { Base64 } from 'js-base64';
 
