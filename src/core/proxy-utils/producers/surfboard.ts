@@ -1,5 +1,5 @@
 import { Result, isPresent } from './utils';
-import { isNotBlank } from '@/utils';
+import { isNotBlank } from '../../../utils';
 // import $ from '@/core/app';
 
 const targetPlatform = 'Surfboard';
