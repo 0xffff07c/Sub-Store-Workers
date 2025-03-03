@@ -3,13 +3,13 @@
  */
 
 import { version } from '../../package.json';
-import migrate from '@/utils/migration';
-import express from '@/vendor/express';
-import $ from '@/core/app';
-import registerDownloadRoutes from '@/restful/download';
-import registerPreviewRoutes from '@/restful/preview';
-import registerSyncRoutes from '@/restful/sync';
-import registerNodeInfoRoutes from '@/restful/node-info';
+import migrate from '../utils/migration';
+import express from '../vendor/express';
+import $ from '../core/app';
+import registerDownloadRoutes from '../restful/download';
+import registerPreviewRoutes from '../restful/preview';
+import registerSyncRoutes from '../restful/sync';
+import registerNodeInfoRoutes from '../restful/node-info';
 
 console.log(
     `
