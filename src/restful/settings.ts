@@ -1,8 +1,8 @@
-import { SETTINGS_KEY, ARTIFACT_REPOSITORY_KEY } from '@/constants';
+import { SETTINGS_KEY, ARTIFACT_REPOSITORY_KEY } from '../constants';
 import { success, failed } from './response';
-import { InternalServerError } from '@/restful/errors';
-import $ from '@/core/app';
-import Gist from '@/utils/gist';
+import { InternalServerError } from './errors';
+import $ from '../core/app';
+import Gist from '../utils/gist';
 
 export default function register($app) {
     const settings = $.read(SETTINGS_KEY);
