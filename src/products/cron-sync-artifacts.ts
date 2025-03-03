@@ -4,11 +4,11 @@ import {
     ARTIFACTS_KEY,
     SUBS_KEY,
     COLLECTIONS_KEY,
-} from '@/constants';
-import $ from '@/core/app';
-import { produceArtifact } from '@/restful/sync';
-import { syncToGist } from '@/restful/artifacts';
-import { findByName } from '@/utils/database';
+} from '../constants';
+import $ from '../core/app';
+import { produceArtifact } from '../restful/sync';
+import { syncToGist } from '../restful/artifacts';
+import { findByName } from '../utils/database';
 
 !(async function () {
     let arg;
