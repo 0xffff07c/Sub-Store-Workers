@@ -1,4 +1,4 @@
-import YAML from '@/utils/yaml';
+import YAML from '../../utils/yaml';
 
 function QXFilter() {
     const type = 'SINGLE';
