@@ -4,8 +4,8 @@ import {
     SCHEMA_VERSION_KEY,
     ARTIFACTS_KEY,
     RULES_KEY,
-} from '../constants';
-import $ from '../core/app';
+} from '@/constants';
+import $ from '@/core/app';
 
 export default function migrate() {
     migrateV2();
@@ -24,15 +24,14 @@ function migrateV2() {
 function doMigrationV2() {
     $.info('Start migrating...');
     // 1. migrate subscriptions
-    const subs = {};
-    // const subs = $.read(SUBS_KEY) || {};
-    const newSubs = Object.values(subs).map((s) => {
+    const subs = $.read(SUBS_KEY) || {};
+    const newSubs = Object.values(subs).map((sub) => {
         // set default source to remote
-        s.source = s.source || 'remote';
+        sub.source = sub.source || 'remote';
 
-        migrateDisplayName(s);
-        migrateProcesses(s);
-        return s;
+        migrateDisplayName(sub);
+        migrateProcesses(sub);
+        return sub;
     });
     $.write(newSubs, SUBS_KEY);
 
