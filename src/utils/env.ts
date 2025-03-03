@@ -1,5 +1,5 @@
 import { version as substoreVersion } from '../../package.json';
-import { ENV } from '@/vendor/open-api';
+import { ENV } from '../vendor/open-api';
 
 const {
     isNode,
