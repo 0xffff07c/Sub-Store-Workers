@@ -1,9 +1,12 @@
-name: 🚀 Deploy Workers
+name: 🚀 Deploy Sub-Store Workers
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-    paths-ignore: ['README.md']
+    paths-ignore: 
+      - 'README.md'
+      - 'LICENSE'
 
 jobs:
   deploy:
