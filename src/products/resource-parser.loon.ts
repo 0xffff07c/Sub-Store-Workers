@@ -1,8 +1,8 @@
 /* eslint-disable no-undef */
-import { ProxyUtils } from '@/core/proxy-utils';
-import { RuleUtils } from '@/core/rule-utils';
+import { ProxyUtils } from '../core/proxy-utils';
+import { RuleUtils } from '../core/rule-utils';
 import { version } from '../../package.json';
-import download from '@/utils/download';
+import download from '../utils/download';
 
 let result = '';
 let resource = typeof $resource !== 'undefined' ? $resource : '';
