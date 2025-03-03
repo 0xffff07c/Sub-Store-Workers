@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer';
+import { Buffer } from 'node:buffer';
 import rs from '../../utils/rs';
 import YAML from '../../utils/yaml';
 import download from '../../utils/download';
