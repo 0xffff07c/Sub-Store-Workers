@@ -1,6 +1,6 @@
 import ClashMeta_Producer from './clashmeta';
-import $ from '@/core/app';
-import { isIPv4, isIPv6 } from '@/utils';
+import $ from '../../../core/app';
+import { isIPv4, isIPv6 } from '../../../utils';
 
 const detourParser = (proxy, parsedProxy) => {
     parsedProxy.detour = proxy['dialer-proxy'] || proxy.detour;
