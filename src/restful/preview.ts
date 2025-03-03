@@ -1,10 +1,10 @@
 import { InternalServerError } from './errors';
-import { ProxyUtils } from '@/core/proxy-utils';
-import { findByName } from '@/utils/database';
+import { ProxyUtils } from '../core/proxy-utils';
+import { findByName } from '../utils/database';
 import { success, failed } from './response';
-import download from '@/utils/download';
-import { SUBS_KEY } from '@/constants';
-import $ from '@/core/app';
+import download from '../utils/download';
+import { SUBS_KEY } from '../constants';
+import $ from '../core/app';
 
 export default function register($app) {
     $app.post('/api/preview/sub', compareSub);
