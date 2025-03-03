@@ -1,19 +1,19 @@
 import {
     getPlatformFromHeaders,
     shouldIncludeUnsupportedProxy,
-} from '@/utils/user-agent';
-import { ProxyUtils } from '@/core/proxy-utils';
-import { COLLECTIONS_KEY, SUBS_KEY } from '@/constants';
-import { findByName } from '@/utils/database';
-import { getFlowHeaders, normalizeFlowHeader } from '@/utils/flow';
-import $ from '@/core/app';
-import { failed } from '@/restful/response';
-import { InternalServerError, ResourceNotFoundError } from '@/restful/errors';
-import { produceArtifact } from '@/restful/sync';
+} from '../utils/user-agent';
+import { ProxyUtils } from '../core/proxy-utils';
+import { COLLECTIONS_KEY, SUBS_KEY } from '../constants';
+import { findByName } from '../utils/database';
+import { getFlowHeaders, normalizeFlowHeader } from '../utils/flow';
+import $ from '../core/app';
+import { failed } from './response';
+import { InternalServerError, ResourceNotFoundError } from './errors';
+import { produceArtifact } from './sync';
 // eslint-disable-next-line no-unused-vars
-import { isIPv4, isIPv6 } from '@/utils';
-import { getISO } from '@/utils/geo';
-import env from '@/utils/env';
+import { isIPv4, isIPv6 } from '../utils';
+import { getISO } from '../utils/geo';
+import env from '../utils/env';
 
 export default function register($app) {
     $app.get('/share/col/:name/:target', async (req, res) => {
