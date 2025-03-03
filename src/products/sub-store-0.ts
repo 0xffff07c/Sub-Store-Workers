@@ -11,18 +11,18 @@ console.log(
 `,
 );
 
-import migrate from '@/utils/migration';
-import express from '@/vendor/express';
-import $ from '@/core/app';
-import registerCollectionRoutes from '@/restful/collections';
-import registerSubscriptionRoutes from '@/restful/subscriptions';
-import registerArtifactRoutes from '@/restful/artifacts';
-import registerSettingRoutes from '@/restful/settings';
-import registerMiscRoutes from '@/restful/miscs';
-import registerSortRoutes from '@/restful/sort';
-import registerFileRoutes from '@/restful/file';
-import registerTokenRoutes from '@/restful/token';
-import registerModuleRoutes from '@/restful/module';
+import migrate from '../utils/migration';
+import express from '../vendor/express';
+import $ from '../core/app';
+import registerCollectionRoutes from '../restful/collections';
+import registerSubscriptionRoutes from '../restful/subscriptions';
+import registerArtifactRoutes from '../restful/artifacts';
+import registerSettingRoutes from '../restful/settings';
+import registerMiscRoutes from '../restful/miscs';
+import registerSortRoutes from '../restful/sort';
+import registerFileRoutes from '../restful/file';
+import registerTokenRoutes from '../restful/token';
+import registerModuleRoutes from '../restful/module';
 
 migrate();
 serve();
