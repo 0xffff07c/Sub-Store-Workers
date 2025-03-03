@@ -1,7 +1,7 @@
 /* eslint-disable no-case-declarations */
 const targetPlatform = 'Loon';
 import { isPresent, Result } from './utils';
-import { isIPv4, isIPv6 } from '@/utils';
+import { isIPv4, isIPv6 } from '../../../utils';
 
 const ipVersions = {
     dual: 'dual',
