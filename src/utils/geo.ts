@@ -1,4 +1,4 @@
-import $ from '@/core/app';
+import $ from '../core/app';
 
 const ISOFlags = {
     '🏳️‍🌈': ['EXP', 'BAND'],
