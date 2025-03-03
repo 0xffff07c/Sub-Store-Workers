@@ -1,7 +1,7 @@
-import { HTTP, ENV } from '@/vendor/open-api';
-import { getPolicyDescriptor } from '@/utils';
-import $ from '@/core/app';
-import { SETTINGS_KEY } from '@/constants';
+import { HTTP, ENV } from '../vendor/open-api';
+import { getPolicyDescriptor } from '../utils';
+import $ from '../core/app';
+import { SETTINGS_KEY } from '../constants';
 
 /**
  * Gist backup
