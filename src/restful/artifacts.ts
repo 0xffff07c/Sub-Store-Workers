@@ -4,15 +4,15 @@ import {
     ARTIFACT_REPOSITORY_KEY,
     ARTIFACTS_KEY,
     SETTINGS_KEY,
-} from '@/constants';
-import { deleteByName, findByName, updateByName } from '@/utils/database';
-import { failed, success } from '@/restful/response';
+} from '../constants';
+import { deleteByName, findByName, updateByName } from '../utils/database';
+import { failed, success } from './response';
 import {
     InternalServerError,
     RequestInvalidError,
     ResourceNotFoundError,
-} from '@/restful/errors';
-import Gist from '@/utils/gist';
+} from './errors';
+import Gist from '../utils/gist';
 
 export default function register($app) {
     // Initialization
