@@ -1,57 +1,69 @@
-name: Build Sub-Store Workers
+name: 🚀 Deploy Sub-Store Workers
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths-ignore: ['README.md']
+    paths-ignore: 
+      - 'README.md'
+      - 'LICENSE'
+
+env:
+  NODE_VERSION: 20.12.2
+  PNPM_VERSION: 8.15.5
 
 jobs:
   deploy:
+    name: Deploy to Cloudflare
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      - name: Checkout code
+      - name: 🛎 Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
-      - name: Setup Node.js
+      - name: ⎔ Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
-      - name: Install pnpm
+      - name: 🎯 Setup pnpm ${{ env.PNPM_VERSION }}
         uses: pnpm/action-setup@v2
         with:
-          version: 8
-          
-      - name: Install dependencies
-        run: |
-          pnpm install
-          pnpm install -g wrangler@latest
-          pnpm add dns-packet ip-address jsrsasign semver
+          version: ${{ env.PNPM_VERSION }}
 
-      - name: Configure Wrangler
+      - name: 📦 Install dependencies
+        run: |
+          pnpm install --frozen-lockfile --prod=false
+          pnpm add -g wrangler@latest
+          pnpm add dns-packet@5.6.1 ip-address@9.0.5 jsrsasign@10.6.0 semver@7.6.0
+
+      - name: 🔧 Configure Wrangler
         env:
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
           DATABASE_ID: ${{ secrets.DATABASE_ID }}
           BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
           D_TOKEN: ${{ secrets.D_TOKEN }}
         run: |
-          # 更新 wrangler.toml 配置
+          # 替换环境变量
           sed -i "s|substore_workers_database_name|$DATABASE_NAME|g" wrangler.toml
           sed -i "s|substore_workers_database_id|$DATABASE_ID|g" wrangler.toml
           sed -i "s|substore_workers_bearer_token|$BEARER_TOKEN|g" wrangler.toml
           sed -i "s|substore_workers_d_token|$D_TOKEN|g" wrangler.toml
-          
-          # 添加必要配置
+
+          # 追加必要配置
           echo -e "\nnode_compat = true" >> wrangler.toml
           echo -e "compatibility_date = \"2024-09-23\"" >> wrangler.toml
           echo -e "\n[build]\ncommand = \"npm run build\"" >> wrangler.toml
           echo -e "external = [\"dns-packet\", \"ip-address\", \"jsrsasign\", \"semver\"]" >> wrangler.toml
 
-      - name: Deploy to Cloudflare
+      - name: 🔨 Build project
+        run: pnpm run build
+
+      - name: 🚀 Deploy to Cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          wrangler deploy
+        run: wrangler deploy --verbose
