@@ -1,6 +1,6 @@
 import gte from 'semver/functions/gte';
 import coerce from 'semver/functions/coerce';
-import $ from '@/core/app';
+import $ from '../core/app';
 
 export function getUserAgentFromHeaders(headers) {
     const keys = Object.keys(headers);
