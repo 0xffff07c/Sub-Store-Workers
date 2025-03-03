@@ -2,22 +2,39 @@
   "name": "sub-store-workers",
   "private": true,
   "version": "0.0.1",
+  "type": "module",
   "scripts": {
     "dev": "wrangler dev --log-level debug",
     "deploy": "wrangler deploy",
-    "deploy_dry": "wrangler deploy --dry-run"
+    "deploy:dry": "wrangler deploy --dry-run",
+    "build": "tsc && wrangler types",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
-    "hono": "^3.3.1",
-    "js-base64": "^3.7.5",
-    "kysely": "^0.26.1",
-    "kysely-d1": "^0.3.0",
-    "lodash": "^4.17.21",
-    "peggy": "^3.0.2",
-    "static-js-yaml": "^1.0.0"
+    "hono": "^4.0.0-rc.1",          // 升级到最新候选版
+    "js-base64": "^3.7.7",          // 更新到最新版
+    "kysely": "^0.26.3",            // 更新到最新版
+    "kysely-d1": "^0.3.1",          // 更新到最新版
+    "dns-packet": "^5.6.1",         // 新增缺失依赖
+    "ip-address": "^9.0.5",         // 新增缺失依赖
+    "jsrsasign": "^10.6.0",         // 新增缺失依赖
+    "semver": "^7.6.0"              // 新增缺失依赖
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20230628.0",
-    "wrangler": "^3.1.2"
+    "@cloudflare/workers-types": "^4.20240415.0",  // 更新到最新类型
+    "@types/lodash": "^4.17.21",     // 添加类型声明
+    "@typescript-eslint/eslint-plugin": "^7.3.0",
+    "@typescript-eslint/parser": "^7.3.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5",         // 明确指定 TypeScript 版本
+    "wrangler": "^3.21.0"           // 升级到最新版
+  },
+  "volta": {
+    "node": "20.12.2"               // 固定 Node.js 版本
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
   }
 }
