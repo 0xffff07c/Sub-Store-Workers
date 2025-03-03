@@ -1,6 +1,6 @@
 /* eslint-disable no-case-declarations */
 import { Base64 } from 'js-base64';
-import { isIPv6 } from '@/utils';
+import { isIPv6 } from '../../../utils';
 
 export default function URI_Producer() {
     const type = 'SINGLE';
