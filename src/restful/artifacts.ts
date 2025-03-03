@@ -1,4 +1,4 @@
-import $ from '@/core/app';
+import $ from '../core/app';
 
 import {
     ARTIFACT_REPOSITORY_KEY,
