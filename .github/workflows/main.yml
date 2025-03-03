@@ -1,65 +1,57 @@
-name: build sub-store-workers
+name: Build Sub-Store Workers
 
 on:
   workflow_dispatch:
   push:
-    branches: ['master']
+    branches: [main]
     paths-ignore: ['README.md']
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check Out
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Install Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '20'
+          cache: 'pnpm'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
-        id: pnpm-install
         with:
-          version: latest
-          run_install: false
+          version: 8
+          
+      - name: Install dependencies
+        run: |
+          pnpm install
+          pnpm install -g wrangler@latest
+          pnpm add dns-packet ip-address jsrsasign semver
 
-      - name: Install and Deploy
+      - name: Configure Wrangler
         env:
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
           DATABASE_ID: ${{ secrets.DATABASE_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
           D_TOKEN: ${{ secrets.D_TOKEN }}
         run: |
-          # 替换配置文件中的占位符
+          # 更新 wrangler.toml 配置
           sed -i "s|substore_workers_database_name|$DATABASE_NAME|g" wrangler.toml
           sed -i "s|substore_workers_database_id|$DATABASE_ID|g" wrangler.toml
           sed -i "s|substore_workers_bearer_token|$BEARER_TOKEN|g" wrangler.toml
           sed -i "s|substore_workers_d_token|$D_TOKEN|g" wrangler.toml
-
-          # 添加必要配置到 wrangler.toml
+          
+          # 添加必要配置
           echo -e "\nnode_compat = true" >> wrangler.toml
           echo -e "compatibility_date = \"2024-09-23\"" >> wrangler.toml
-          echo -e "\n[build.upload]" >> wrangler.toml
-          echo -e 'format = "modules"' >> wrangler.toml
-          echo -e 'main = "./src/index.ts"' >> wrangler.toml
-          echo -e 'rules = [{ type = "ESModule", globs = ["**/*.js"] }]' >> wrangler.toml
-          echo -e '\n[build]\nexternal = ["dns-packet", "ip-address", "jsrsasign", "semver"]' >> wrangler.toml
+          echo -e "\n[build]\ncommand = \"npm run build\"" >> wrangler.toml
+          echo -e "external = [\"dns-packet\", \"ip-address\", \"jsrsasign\", \"semver\"]" >> wrangler.toml
 
-          # 安装全局依赖
-          pnpm install -g wrangler@latest
-
-          # 安装项目依赖
-          pnpm install dns-packet ip-address jsrsasign semver
-          pnpm install
-
-          # 执行部署
-          CLOUDFLARE_API_TOKEN="$CLOUDFLARE_API_TOKEN" wrangler deploy \
-            --compatibility-date=2024-09-23 \
-            --external dns-packet \
-            --external ip-address \
-            --external jsrsasign \
-            --external semver
+      - name: Deploy to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          wrangler deploy
