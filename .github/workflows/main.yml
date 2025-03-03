@@ -76,6 +76,7 @@ jobs:
         sed -i "s|substore_workers_bearer_token|$BEARER_TOKEN|g" wrangler.toml
         sed -i "s|substore_workers_d_token|$D_TOKEN|g" wrangler.toml
         echo -e "\nnode_compat = true" >> wrangler.toml
+        echo -e "usage_model = \"bundled\"" >> wrangler.toml
         echo -e "compatibility_date = \"$(date +%Y-%m-%d)\"" >> wrangler.toml
 
     - name: 🚀 Deploy
