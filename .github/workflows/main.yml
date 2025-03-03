@@ -32,6 +32,7 @@ jobs:
         git config --global user.email "licoln.lee.us@outlook.com"
         git config --global user.name "0xffff07c"
         git add pnpm-lock.yaml
+        pnpm add -D @types/node@20.12.7
         git commit -m "chore: generate pnpm-lock.yaml" || true
         git push || true
 
