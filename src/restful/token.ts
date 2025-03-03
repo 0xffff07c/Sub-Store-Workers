@@ -1,9 +1,9 @@
-import { deleteByName } from '@/utils/database';
-import { ENV } from '@/vendor/open-api';
-import { TOKENS_KEY, SUBS_KEY, FILES_KEY, COLLECTIONS_KEY } from '@/constants';
-import { failed, success } from '@/restful/response';
-import $ from '@/core/app';
-import { RequestInvalidError, InternalServerError } from '@/restful/errors';
+import { deleteByName } from '../utils/database';
+import { ENV } from '../vendor/open-api';
+import { TOKENS_KEY, SUBS_KEY, FILES_KEY, COLLECTIONS_KEY } from '../constants';
+import { failed, success } from './response';
+import $ from '../core/app';
+import { RequestInvalidError, InternalServerError } from './errors';
 
 export default function register($app) {
     if (!$.read(TOKENS_KEY)) $.write([], TOKENS_KEY);
