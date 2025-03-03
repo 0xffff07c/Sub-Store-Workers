@@ -1,14 +1,35 @@
 name = "sub-store-workers"
-compatibility_date = "2023-07-19"
 main = "src/index.ts"
-compatibility_flags = [ "nodejs_compat" ]
+compatibility_date = "2024-09-23"  # 更新到最新兼容日期
+node_compat = true                 # 启用完整 Node.js 兼容模式
 minify = true
 
+# 构建配置
+[build]
+command = "npm run build"  # 添加构建命令
+external = [               # 声明外部依赖
+  "dns-packet",
+  "ip-address",
+  "jsrsasign",
+  "semver",
+  "semver/functions/gte",
+  "semver/functions/coerce"
+]
+
+# D1 数据库配置
 [[d1_databases]]
 binding = "DB"
 database_name = "substore_workers_database_name"
 database_id = "substore_workers_database_id"
 
+# 环境变量
 [vars]
 BEARER_TOKEN = "substore_workers_bearer_token"
 D_TOKEN = "substore_workers_d_token"
+
+# 优化 Workers 配置
+[triggers]
+crons = []
+
+[usage_model]
+bundled = "required"
