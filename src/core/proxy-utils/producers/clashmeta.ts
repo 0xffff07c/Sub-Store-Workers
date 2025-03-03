@@ -1,4 +1,4 @@
-import { isPresent } from '@/core/proxy-utils/producers/utils';
+import { isPresent } from '../../../core/proxy-utils/producers/utils';
 
 export default function ClashMeta_Producer() {
     const type = 'ALL';
