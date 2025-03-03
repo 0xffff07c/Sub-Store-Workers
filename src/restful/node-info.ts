@@ -1,7 +1,7 @@
-import producer from '@/core/proxy-utils/producers';
-import { HTTP } from '@/vendor/open-api';
-import { failed, success } from '@/restful/response';
-import { NetworkError } from '@/restful/errors';
+import producer from '../core/proxy-utils/producers';
+import { HTTP } from '../vendor/open-api';
+import { failed, success } from './response';
+import { NetworkError } from './errors';
 
 export default function register($app) {
     $app.post('/api/utils/node-info', getNodeInfo);
