@@ -1,6 +1,6 @@
-import { success, failed } from '@/restful/response';
-import { ProxyUtils } from '@/core/proxy-utils';
-import { RuleUtils } from '@/core/rule-utils';
+import { success, failed } from './response';
+import { ProxyUtils } from '../core/proxy-utils';
+import { RuleUtils } from '../core/rule-utils';
 
 export default function register($app) {
     $app.route('/api/proxy/parse').post(proxy_parser);
