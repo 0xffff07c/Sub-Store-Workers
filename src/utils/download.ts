@@ -1,17 +1,17 @@
-import { SETTINGS_KEY } from '@/constants';
-import { HTTP, ENV } from '@/vendor/open-api';
-import { hex_md5 } from '@/vendor/md5';
-import { getPolicyDescriptor } from '@/utils';
-import resourceCache from '@/utils/resource-cache';
-import headersResourceCache from '@/utils/headers-resource-cache';
+import { SETTINGS_KEY } from '../constants';
+import { HTTP, ENV } from '../vendor/open-api';
+import { hex_md5 } from '../vendor/md5';
+import { getPolicyDescriptor } from '../utils';
+import resourceCache from '../utils/resource-cache';
+import headersResourceCache from '../utils';
 import {
     getFlowField,
     getFlowHeaders,
     parseFlowHeaders,
     validCheck,
-} from '@/utils/flow';
-import $ from '@/core/app';
-import PROXY_PREPROCESSORS from '@/core/proxy-utils/preprocessors';
+} from '../utils/flow';
+import $ from '../core/app';
+import PROXY_PREPROCESSORS from '../core/proxy-utils/preprocessors';
 const clashPreprocessor = PROXY_PREPROCESSORS.find(
     (processor) => processor.name === 'Clash Pre-processor',
 );
