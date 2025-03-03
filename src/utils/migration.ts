@@ -4,8 +4,8 @@ import {
     SCHEMA_VERSION_KEY,
     ARTIFACTS_KEY,
     RULES_KEY,
-} from '@/constants';
-import $ from '@/core/app';
+} from '../constants';
+import $ from '../core/app';
 
 export default function migrate() {
     migrateV2();
