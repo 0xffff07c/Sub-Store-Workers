@@ -1,10 +1,10 @@
-import express from '@/vendor/express';
-import $ from '@/core/app';
-import migrate from '@/utils/migration';
-import download from '@/utils/download';
-import { syncArtifacts, produceArtifact } from '@/restful/sync';
-import { gistBackupAction } from '@/restful/miscs';
-import { TOKENS_KEY } from '@/constants';
+import express from '../vendor/express';
+import $ from '../core/app';
+import migrate from '../utils/migration';
+import download from '../utils/download';
+import { syncArtifacts, produceArtifact } from './sync';
+import { gistBackupAction } from './miscs';
+import { TOKENS_KEY } from '../constants';
 
 import registerSubscriptionRoutes from './subscriptions';
 import registerCollectionRoutes from './collections';
