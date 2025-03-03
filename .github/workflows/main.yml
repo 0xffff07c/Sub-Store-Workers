@@ -24,6 +24,17 @@ jobs:
         version: 8
         run_install: false
 
+    - name: Generate pnpm-lock
+      run: |
+        # 初始化pnpm环境
+        pnpm install --ignore-scripts
+        # 提交生成的lock文件（仅限CI环境）
+        git config --global user.email "licoln.lee.us@outlook.com"
+        git config --global user.name "0xffff07c"
+        git add pnpm-lock.yaml
+        git commit -m "chore: generate pnpm-lock.yaml" || true
+        git push || true
+
     # 配置路径环境变量
     - name: Setup PATH
       run: |
