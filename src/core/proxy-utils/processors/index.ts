@@ -1,18 +1,18 @@
-import resourceCache from '@/utils/resource-cache';
-import scriptResourceCache from '@/utils/script-resource-cache';
-import { isIPv4, isIPv6, ipAddress } from '@/utils';
-import { FULL } from '@/utils/logical';
-import { getFlag, removeFlag } from '@/utils/geo';
-import { doh } from '@/utils/dns';
+import resourceCache from '../../../utils/resource-cache';
+import scriptResourceCache from '../../../utils/script-resource-cache';
+import { isIPv4, isIPv6, ipAddress } from '../../../utils';
+import { FULL } from '../../../utils/logical';
+import { getFlag, removeFlag } from '../../../utils/geo';
+import { doh } from '../../../utils/dns';
 import lodash from 'lodash';
-import $ from '@/core/app';
-import { hex_md5 } from '@/vendor/md5';
-import { ProxyUtils } from '@/core/proxy-utils';
-import { produceArtifact } from '@/restful/sync';
-import { SETTINGS_KEY } from '@/constants';
-import YAML from '@/utils/yaml';
+import $ from '../../../core/app';
+import { hex_md5 } from '../../../vendor/md5';
+import { ProxyUtils } from '../../../core/proxy-utils';
+import { produceArtifact } from '../../../restful/sync';
+import { SETTINGS_KEY } from '../../../constants';
+import YAML from '../../../utils/yaml';
 
-import env from '@/utils/env';
+import env from '../../../utils/env';
 import {
     getFlowField,
     getFlowHeaders,
@@ -21,7 +21,7 @@ import {
     flowTransfer,
     getRmainingDays,
     normalizeFlowHeader,
-} from '@/utils/flow';
+} from '../../../utils/flow';
 
 function isObject(item) {
     return item && typeof item === 'object' && !Array.isArray(item);
