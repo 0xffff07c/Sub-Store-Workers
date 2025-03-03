@@ -1,18 +1,18 @@
-import $ from '@/core/app';
+import $ from '../core/app';
 import {
     ARTIFACTS_KEY,
     COLLECTIONS_KEY,
     RULES_KEY,
     SUBS_KEY,
     FILES_KEY,
-} from '@/constants';
-import { failed, success } from '@/restful/response';
-import { InternalServerError, ResourceNotFoundError } from '@/restful/errors';
-import { findByName } from '@/utils/database';
-import download from '@/utils/download';
-import { ProxyUtils } from '@/core/proxy-utils';
-import { RuleUtils } from '@/core/rule-utils';
-import { syncToGist } from '@/restful/artifacts';
+} from '../constants';
+import { failed, success } from './response';
+import { InternalServerError, ResourceNotFoundError } from './errors';
+import { findByName } from '../utils/database';
+import download from '../utils/download';
+import { ProxyUtils } from '../core/proxy-utils';
+import { RuleUtils } from '../core/rule-utils';
+import { syncToGist } from './artifacts';
 
 export default function register($app) {
     // Initialization
