@@ -16,7 +16,7 @@ const grammars = String.raw`
 
 // per-parse initializer
 {
-    const proxy = {};
+	const proxy = {};
     const obfs = {};
     const $ = {};
 
@@ -38,20 +38,23 @@ const grammars = String.raw`
     }
 }
 
-start = (trojan/shadowsocks/vmess/http/socks5) {
+start = (trojan/shadowsocks/vmess/vless/http/socks5) {
     return proxy
 }
 
 trojan = "trojan" equals address
-    (password/over_tls/tls_host/tls_fingerprint/tls_verification/obfs/obfs_host/obfs_uri/tag/udp_relay/udp_over_tcp/fast_open/others)* {
+    (password/over_tls/tls_host/tls_pubkey_sha256/tls_alpn/tls_no_session_ticket/tls_no_session_reuse/tls_fingerprint/tls_verification/obfs/obfs_host/obfs_uri/tag/udp_relay/udp_over_tcp/fast_open/server_check_url/others)* {
     proxy.type = "trojan";
     handleObfs();
 }
 
 shadowsocks = "shadowsocks" equals address
-    (password/method/obfs_ssr/obfs_ss/obfs_host/obfs_uri/ssr_protocol/ssr_protocol_param/tls_fingerprint/tls_verification/udp_relay/udp_over_tcp/fast_open/tag/others)* {
-    if (proxy.protocol) {
+    (password/method/obfs_ssr/obfs_ss/obfs_host/obfs_uri/ssr_protocol/ssr_protocol_param/tls_pubkey_sha256/tls_alpn/tls_no_session_ticket/tls_no_session_reuse/tls_fingerprint/tls_verification/udp_relay/udp_over_tcp/fast_open/tag/server_check_url/others)* {
+    if (proxy.protocol || proxy.type === "ssr") {
         proxy.type = "ssr";
+        if (!proxy.protocol) {
+            proxy.protocol = "origin";
+        }
         // handle ssr obfs
         if (obfs.host) proxy["obfs-param"] = obfs.host;
         if (obfs.type) proxy.obfs = obfs.type;
@@ -80,7 +83,7 @@ shadowsocks = "shadowsocks" equals address
 }
 
 vmess = "vmess" equals address
-    (uuid/method/over_tls/tls_host/tls_fingerprint/tls_verification/tag/obfs/obfs_host/obfs_uri/udp_relay/udp_over_tcp/fast_open/aead/others)* {
+    (uuid/method/over_tls/tls_host/tls_pubkey_sha256/tls_alpn/tls_no_session_ticket/tls_no_session_reuse/tls_fingerprint/tls_verification/tag/obfs/obfs_host/obfs_uri/udp_relay/udp_over_tcp/fast_open/aead/server_check_url/others)* {
     proxy.type = "vmess";
     proxy.cipher = proxy.cipher || "none";
     if (proxy.aead) {
@@ -91,13 +94,20 @@ vmess = "vmess" equals address
     handleObfs();
 }
 
+vless = "vless" equals address
+    (uuid/method/over_tls/tls_host/tls_pubkey_sha256/tls_alpn/tls_no_session_ticket/tls_no_session_reuse/tls_fingerprint/tls_verification/tag/obfs/obfs_host/obfs_uri/udp_relay/udp_over_tcp/fast_open/aead/server_check_url/others)* {
+    proxy.type = "vless";
+    proxy.cipher = proxy.cipher || "none";
+    handleObfs();
+}
+
 http = "http" equals address 
-    (username/password/over_tls/tls_host/tls_fingerprint/tls_verification/tag/fast_open/udp_relay/udp_over_tcp/others)*{
+    (username/password/over_tls/tls_host/tls_pubkey_sha256/tls_alpn/tls_no_session_ticket/tls_no_session_reuse/tls_fingerprint/tls_verification/tag/fast_open/udp_relay/udp_over_tcp/server_check_url/others)*{
     proxy.type = "http";
 }
 
 socks5 = "socks5" equals address
-    (username/password/password/over_tls/tls_host/tls_fingerprint/tls_verification/tag/fast_open/udp_relay/udp_over_tcp/others)* {
+    (username/password/password/over_tls/tls_host/tls_pubkey_sha256/tls_alpn/tls_no_session_ticket/tls_no_session_reuse/tls_fingerprint/tls_verification/tag/fast_open/udp_relay/udp_over_tcp/server_check_url/others)* {
     proxy.type = "socks5";
 }
     
@@ -131,7 +141,7 @@ ip = & {
 port = digits:[0-9]+ { 
     const port = parseInt(digits.join(""), 10); 
     if (port >= 0 && port <= 65535) {
-        return port;
+    	return port;
     }
 }
 
@@ -142,7 +152,7 @@ uuid = comma "password" equals uuid:[^=,]+ { proxy.uuid = uuid.join("").trim(); 
 method = comma "method" equals cipher:cipher { 
     proxy.cipher = cipher;
 };
-cipher = ("aes-128-gcm"/"aes-192-gcm"/"aes-256-gcm"/"aes-128-cfb"/"aes-192-cfb"/"aes-256-cfb"/"aes-128-ctr"/"aes-192-ctr"/"aes-256-ctr"/"rc4-md5"/"xchacha20-ietf-poly1305"/"chacha20-ietf-poly1305"/"chacha20-ietf"/"chacha20-poly1305"/"chacha20"/"none");
+cipher = ("aes-128-cfb"/"aes-128-ctr"/"aes-128-gcm"/"aes-192-cfb"/"aes-192-ctr"/"aes-192-gcm"/"aes-256-cfb"/"aes-256-ctr"/"aes-256-gcm"/"bf-cfb"/"cast5-cfb"/"chacha20-ietf-poly1305"/"chacha20-ietf"/"chacha20-poly1305"/"chacha20"/"des-cfb"/"none"/"rc2-cfb"/"rc4-md5-6"/"rc4-md5"/"salsa20"/"xchacha20-ietf-poly1305");
 aead = comma "aead" equals flag:bool { proxy.aead = flag; }
 
 udp_relay = comma "udp-relay" equals flag:bool { proxy.udp = flag; }
@@ -155,9 +165,17 @@ tls_verification = comma "tls-verification" equals flag:bool {
     proxy["skip-cert-verify"] = !flag;
 }
 tls_fingerprint = comma "tls-cert-sha256" equals tls_fingerprint:$[^,]+ { proxy["tls-fingerprint"] = tls_fingerprint.trim(); }
+tls_pubkey_sha256 = comma "tls-pubkey-sha256" equals param:$[^=,]+ { proxy["tls-pubkey-sha256"] = param; }
+tls_alpn = comma "tls-alpn" equals param:$[^=,]+ { proxy["tls-alpn"] = param; }
+tls_no_session_ticket = comma "tls-no-session-ticket" equals flag:bool { 
+    proxy["tls-no-session-ticket"] = flag;
+}
+tls_no_session_reuse = comma "tls-no-session-reuse" equals flag:bool { 
+    proxy["tls-no-session-reuse"] = flag;
+}
 
 obfs_ss = comma "obfs" equals type:("http"/"tls"/"wss"/"ws"/"over-tls") { obfs.type = type; return type; }
-obfs_ssr = comma "obfs" equals type:("plain"/"http_simple"/"http_post"/"random_head"/"tls1.2_ticket_auth"/"tls1.2_ticket_fastauth") { obfs.type = type; return type; }
+obfs_ssr = comma "obfs" equals type:("plain"/"http_simple"/"http_post"/"random_head"/"tls1.2_ticket_auth"/"tls1.2_ticket_fastauth") { proxy.type = "ssr"; obfs.type = type; return type; }
 obfs = comma "obfs" equals type:("wss"/"ws"/"over-tls"/"http") { obfs.type = type; return type; };
 
 obfs_host = comma "obfs-host" equals host:domain { obfs.host = host; }
@@ -165,6 +183,8 @@ obfs_uri = comma "obfs-uri" equals uri:uri { obfs.path = uri; }
 
 ssr_protocol = comma "ssr-protocol" equals protocol:("origin"/"auth_sha1_v4"/"auth_aes128_md5"/"auth_aes128_sha1"/"auth_chain_a"/"auth_chain_b") { proxy.protocol = protocol; return protocol; }
 ssr_protocol_param = comma "ssr-protocol-param" equals param:$[^=,]+ { proxy["protocol-param"] = param; }
+
+server_check_url = comma "server_check_url" equals param:$[^=,]+ { proxy["test-url"] = param; }
 
 uri = $[^,]+
 
