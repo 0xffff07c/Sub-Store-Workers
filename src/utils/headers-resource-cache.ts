@@ -1,8 +1,8 @@
-import $ from '@/core/app';
+import $ from '../core/app';
 import {
     HEADERS_RESOURCE_CACHE_KEY,
     CHR_EXPIRATION_TIME_KEY,
-} from '@/constants';
+} from '../constants';
 
 class ResourceCache {
     constructor() {
