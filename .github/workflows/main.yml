@@ -11,29 +11,45 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
 
     steps:
-    - name: 🔄 Checkout code
+    - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: ⎔ Setup Node.js
+    # 必须先用官方 action 安装 pnpm
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      id: pnpm-setup
+      with:
+        version: 8
+        run_install: false
+
+    # 配置路径环境变量
+    - name: Setup PATH
+      run: |
+        echo "$HOME/.local/share/pnpm" >> $GITHUB_PATH
+        echo "$HOME/.pnpm-store" >> $GITHUB_PATH
+
+    # 再安装 Node.js
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
         cache: 'pnpm'
 
-    - name: 📦 Install pnpm
-      uses: pnpm/action-setup@v2
-      with:
-        version: 8
-        run_install: |
-          - args: [--global, wrangler]
-          - args: [add, -D, typescript]
+    # 验证环境
+    - name: Check versions
+      run: |
+        echo "Node: $(node --version)"
+        echo "npm: $(npm --version)"
+        echo "pnpm: $(pnpm --version)"  # 此时应能正确识别
+        which pnpm
 
-    - name: 🧩 Install dependencies
+    # 安装项目依赖
+    - name: Install dependencies
       run: |
         pnpm install
+        pnpm add -g wrangler@latest
         pnpm add dns-packet@5.6.1 ip-address@9.0.5 jsrsasign@10.6.0 semver@7.6.0
 
     - name: ⚙️ Configure Wrangler
