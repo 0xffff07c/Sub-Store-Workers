@@ -1,182 +1,198 @@
 /* eslint-disable no-undef */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+
+type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS' | 'PATCH';
+type HTTPOptions = {
+    url: string;
+    headers?: Record<string, string>;
+    body?: string;
+    timeout?: number;
+    node?: string;
+    opts?: any;
+    events?: {
+        onRequest?: (method: HTTPMethod, options: HTTPOptions) => void;
+        onResponse?: (resp: HTTPResponse) => any;
+        onTimeout?: () => void;
+    };
+    [key: string]: any;
+};
+type HTTPResponse = {
+    statusCode: number;
+    headers: Record<string, string>;
+    body: string;
+};
+
+interface Env {
+    isQX: boolean;
+    isLoon: boolean;
+    isSurge: boolean;
+    isNode: boolean;
+    isStash: boolean;
+    isShadowRocket: boolean;
+    isEgern: boolean;
+    isLanceX: boolean;
+    isGUIforCores: boolean;
+}
+
+interface HTTPClient {
+    get: (options: HTTPOptions | string) => Promise<HTTPResponse>;
+    post: (options: HTTPOptions | string) => Promise<HTTPResponse>;
+    put: (options: HTTPOptions | string) => Promise<HTTPResponse>;
+    delete: (options: HTTPOptions | string) => Promise<HTTPResponse>;
+    head: (options: HTTPOptions | string) => Promise<HTTPResponse>;
+    options: (options: HTTPOptions | string) => Promise<HTTPResponse>;
+    patch: (options: HTTPOptions | string) => Promise<HTTPResponse>;
+}
+
+interface NotificationOptions {
+    'open-url'?: string;
+    'media-url'?: string;
+}
+
+declare const $task: any;
+declare const $loon: any;
+declare const $httpClient: any;
+declare const $environment: any;
+declare const $persistentStore: any;
+declare const $prefs: any;
+declare const $notify: any;
+declare const $notification: any;
+declare const $Plugins: any;
+declare const $context: any;
+declare const $done: (options?: {}) => void;
+
 const isQX = typeof $task !== 'undefined';
 const isLoon = typeof $loon !== 'undefined';
 const isSurge = typeof $httpClient !== 'undefined' && !isLoon;
-const isNode = eval(`typeof process !== "undefined"`); // eval is needed in order to avoid browserify processing
-const isStash =
-    'undefined' !== typeof $environment && $environment['stash-version'];
-const isShadowRocket = 'undefined' !== typeof $rocket;
-const isEgern = 'object' == typeof egern;
-const isLanceX = 'undefined' != typeof $native;
+// @ts-ignore
+const isNode = eval(`typeof process !== "undefined"`);
+const isStash = typeof $environment !== 'undefined' && $environment['stash-version'];
+const isShadowRocket = typeof $rocket !== 'undefined';
+const isEgern = typeof egern === 'object';
+const isLanceX = typeof $native !== 'undefined';
 const isGUIforCores = typeof $Plugins !== 'undefined';
 
 export class OpenAPI {
+    name: string;
+    debug: boolean;
+    cache: Record<string, any>;
+    root: Record<string, any>;
+    http: HTTPClient;
+    env: Env;
+    node: { fs: any } | null;
+
     constructor(name = 'untitled', debug = false) {
         this.name = name;
         this.debug = debug;
-
+        this.cache = {};
+        this.root = {};
         this.http = HTTP();
         this.env = ENV();
-
-        this.node = (() => {
-            if (isNode) {
-                const fs = eval("require('fs')");
-
-                return {
-                    fs,
-                };
-            } else {
-                return null;
-            }
-        })();
+        this.node = isNode ? { fs: eval("require('fs')") } : null;
         this.initCache();
 
-        const delay = (t, v) =>
-            new Promise(function (resolve) {
-                setTimeout(resolve.bind(null, v), t);
-            });
+        const delay = <T>(t: number, v: T): Promise<T> =>
+            new Promise(resolve => setTimeout(() => resolve(v), t));
 
-        Promise.prototype.delay = async function (t) {
+        Promise.prototype.delay = async function <T>(t: number): Promise<T> {
             const v = await this;
             return await delay(t, v);
         };
     }
 
-    // persistence
-    // initialize cache
-    initCache() {
-        if (isQX)
-            this.cache = JSON.parse($prefs.valueForKey(this.name) || '{}');
-        if (isLoon || isSurge)
-            this.cache = JSON.parse($persistentStore.read(this.name) || '{}');
-        if (isGUIforCores)
-            this.cache = JSON.parse(
-                $Plugins.SubStoreCache.get(this.name) || '{}',
-            );
+    private initCache(): void {
+        if (isQX) this.cache = JSON.parse($prefs.valueForKey(this.name) || '{}');
+        if (isLoon || isSurge) this.cache = JSON.parse($persistentStore.read(this.name) || '{}');
+        if (isGUIforCores) this.cache = JSON.parse($Plugins.SubStoreCache.get(this.name) || '{}');
+        
         if (isNode) {
-            // create a json for root cache
-            const basePath =
-                eval('process.env.SUB_STORE_DATA_BASE_PATH') || '.';
-            let rootPath = `${basePath}/root.json`;
-
+            const basePath = eval('process.env.SUB_STORE_DATA_BASE_PATH') || '.';
+            const rootPath = `${basePath}/root.json`;
+            
             this.log(`Root path: ${rootPath}`);
-            if (!this.node.fs.existsSync(rootPath)) {
-                this.node.fs.writeFileSync(rootPath, JSON.stringify({}), {
-                    flag: 'wx',
-                });
+            if (!this.node!.fs.existsSync(rootPath)) {
+                this.node!.fs.writeFileSync(rootPath, JSON.stringify({}), { flag: 'wx' });
                 this.root = {};
             } else {
-                this.root = JSON.parse(
-                    this.node.fs.readFileSync(`${rootPath}`),
-                );
+                this.root = JSON.parse(this.node!.fs.readFileSync(rootPath, 'utf-8'));
             }
 
-            // create a json file with the given name if not exists
-            let fpath = `${basePath}/${this.name}.json`;
+            const fpath = `${basePath}/${this.name}.json`;
             this.log(`Data path: ${fpath}`);
-            if (!this.node.fs.existsSync(fpath)) {
-                this.node.fs.writeFileSync(fpath, JSON.stringify({}), {
-                    flag: 'wx',
-                });
+            if (!this.node!.fs.existsSync(fpath)) {
+                this.node!.fs.writeFileSync(fpath, JSON.stringify({}), { flag: 'wx' });
                 this.cache = {};
             } else {
-                this.cache = JSON.parse(this.node.fs.readFileSync(`${fpath}`));
+                this.cache = JSON.parse(this.node!.fs.readFileSync(fpath, 'utf-8'));
             }
         }
     }
 
-    // store cache
-    persistCache() {
+    private persistCache(): void {
         const data = JSON.stringify(this.cache, null, 2);
         if (isQX) $prefs.setValueForKey(data, this.name);
         if (isLoon || isSurge) $persistentStore.write(data, this.name);
         if (isGUIforCores) $Plugins.SubStoreCache.set(this.name, data);
+        
         if (isNode) {
-            const basePath =
-                eval('process.env.SUB_STORE_DATA_BASE_PATH') || '.';
-
-            this.node.fs.writeFileSync(
+            const basePath = eval('process.env.SUB_STORE_DATA_BASE_PATH') || '.';
+            this.node!.fs.writeFileSync(
                 `${basePath}/${this.name}.json`,
                 data,
                 { flag: 'w' },
-                (err) => console.log(err),
+                (err: any) => console.log(err)
             );
-            this.node.fs.writeFileSync(
+            this.node!.fs.writeFileSync(
                 `${basePath}/root.json`,
                 JSON.stringify(this.root, null, 2),
                 { flag: 'w' },
-                (err) => console.log(err),
+                (err: any) => console.log(err)
             );
         }
     }
 
-    write(data, key) {
+    write(data: any, key: string): void {
         this.log(`SET ${key}`);
-        if (key.indexOf('#') !== -1) {
-            key = key.substr(1);
-            if (isSurge || isLoon) {
-                return $persistentStore.write(data, key);
-            }
-            if (isQX) {
-                return $prefs.setValueForKey(data, key);
-            }
-            if (isNode) {
-                this.root[key] = data;
-            }
-            if (isGUIforCores) {
-                return $Plugins.SubStoreCache.set(key, data);
-            }
+        if (key.includes('#')) {
+            const cleanKey = key.substring(1);
+            if (isSurge || isLoon) $persistentStore.write(data, cleanKey);
+            if (isQX) $prefs.setValueForKey(data, cleanKey);
+            if (isNode) this.root[cleanKey] = data;
+            if (isGUIforCores) $Plugins.SubStoreCache.set(cleanKey, data);
         } else {
             this.cache[key] = data;
         }
         this.persistCache();
     }
 
-    read(key) {
+    read(key: string): any {
         this.log(`READ ${key}`);
-        if (key.indexOf('#') !== -1) {
-            key = key.substr(1);
-            if (isSurge || isLoon) {
-                return $persistentStore.read(key);
-            }
-            if (isQX) {
-                return $prefs.valueForKey(key);
-            }
-            if (isNode) {
-                return this.root[key];
-            }
-            if (isGUIforCores) {
-                return $Plugins.SubStoreCache.get(key);
-            }
-        } else {
-            return this.cache[key];
+        if (key.includes('#')) {
+            const cleanKey = key.substring(1);
+            if (isSurge || isLoon) return $persistentStore.read(cleanKey);
+            if (isQX) return $prefs.valueForKey(cleanKey);
+            if (isNode) return this.root[cleanKey];
+            if (isGUIforCores) return $Plugins.SubStoreCache.get(cleanKey);
         }
+        return this.cache[key];
     }
 
-    delete(key) {
+    delete(key: string): void {
         this.log(`DELETE ${key}`);
-        if (key.indexOf('#') !== -1) {
-            key = key.substr(1);
-            if (isSurge || isLoon) {
-                return $persistentStore.write(null, key);
-            }
-            if (isQX) {
-                return $prefs.removeValueForKey(key);
-            }
-            if (isNode) {
-                delete this.root[key];
-            }
-            if (isGUIforCores) {
-                return $Plugins.SubStoreCache.remove(key);
-            }
+        if (key.includes('#')) {
+            const cleanKey = key.substring(1);
+            if (isSurge || isLoon) $persistentStore.write(null, cleanKey);
+            if (isQX) $prefs.removeValueForKey(cleanKey);
+            if (isNode) delete this.root[cleanKey];
+            if (isGUIforCores) $Plugins.SubStoreCache.remove(cleanKey);
         } else {
             delete this.cache[key];
         }
         this.persistCache();
     }
 
-    // notification
-    notify(title, subtitle = '', content = '', options = {}) {
+    notify(title: string, subtitle = '', content = '', options: NotificationOptions = {}): void {
         const openURL = options['open-url'];
         const mediaURL = options['media-url'];
 
@@ -185,91 +201,70 @@ export class OpenAPI {
             $notification.post(
                 title,
                 subtitle,
-                content + `${mediaURL ? '\n多媒体:' + mediaURL : ''}`,
-                {
-                    url: openURL,
-                },
+                `${content}${mediaURL ? `\n多媒体:${mediaURL}` : ''}`,
+                { url: openURL }
             );
         }
         if (isLoon) {
-            let opts = {};
-            if (openURL) opts['openUrl'] = openURL;
-            if (mediaURL) opts['mediaUrl'] = mediaURL;
-            if (JSON.stringify(opts) === '{}') {
-                $notification.post(title, subtitle, content);
-            } else {
-                $notification.post(title, subtitle, content, opts);
-            }
+            const opts: any = {};
+            if (openURL) opts.openUrl = openURL;
+            if (mediaURL) opts.mediaUrl = mediaURL;
+            $notification.post(title, subtitle, content, Object.keys(opts).length ? opts : undefined);
         }
         if (isNode) {
-            const content_ =
-                content +
-                (openURL ? `\n点击跳转: ${openURL}` : '') +
-                (mediaURL ? `\n多媒体: ${mediaURL}` : '');
-            console.log(`${title}\n${subtitle}\n${content_}\n\n`);
+            const fullContent = [content, openURL && `点击跳转: ${openURL}`, mediaURL && `多媒体: ${mediaURL}`]
+                .filter(Boolean)
+                .join('\n');
+            console.log(`${title}\n${subtitle}\n${fullContent}\n`);
 
-            let push = eval('process.env.SUB_STORE_PUSH_SERVICE');
-            if (push) {
-                const url = push
-                    .replace(
-                        '[推送标题]',
-                        encodeURIComponent(title || 'Sub-Store'),
+            const pushService = eval('process.env.SUB_STORE_PUSH_SERVICE');
+            if (pushService) {
+                const encodedTitle = encodeURIComponent(title || 'Sub-Store');
+                const encodedContent = encodeURIComponent([subtitle, fullContent].join('\n'));
+                const url = pushService
+                    .replace('[推送标题]', encodedTitle)
+                    .replace('[推送内容]', encodedContent);
+                
+                this.http.get({ url })
+                    .then(resp => 
+                        console.log(`[Push Service] URL: ${url}\nRES: ${resp.statusCode} ${resp.body}`)
                     )
-                    .replace(
-                        '[推送内容]',
-                        encodeURIComponent(
-                            [subtitle, content_].map((i) => i).join('\n'),
-                        ),
+                    .catch(e => 
+                        console.log(`[Push Service] URL: ${url}\nERROR: ${e}`)
                     );
-                const $http = HTTP();
-                $http
-                    .get({ url })
-                    .then((resp) => {
-                        console.log(
-                            `[Push Service] URL: ${url}\nRES: ${resp.statusCode} ${resp.body}`,
-                        );
-                    })
-                    .catch((e) => {
-                        console.log(`[Push Service] URL: ${url}\nERROR: ${e}`);
-                    });
             }
         }
         if (isGUIforCores) {
-            $Plugins.Notify(title, subtitle + '\n' + content);
+            $Plugins.Notify(title, `${subtitle}\n${content}`);
         }
     }
 
-    // other helper functions
-    log(msg) {
+    log(msg: string): void {
         if (this.debug) console.log(`[${this.name}] LOG: ${msg}`);
     }
 
-    info(msg) {
+    info(msg: string): void {
         console.log(`[${this.name}] INFO: ${msg}`);
     }
 
-    error(msg) {
+    error(msg: string): void {
         console.log(`[${this.name}] ERROR: ${msg}`);
     }
 
-    wait(millisec) {
-        return new Promise((resolve) => setTimeout(resolve, millisec));
+    wait(millisec: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, millisec));
     }
 
-    done(value = {}) {
+    done(value: object = {}): void {
         if (isQX || isLoon || isSurge || isGUIforCores) {
             $done(value);
-        } else if (isNode) {
-            if (typeof $context !== 'undefined') {
-                $context.headers = value.headers;
-                $context.statusCode = value.statusCode;
-                $context.body = value.body;
-            }
+        } else if (isNode && typeof $context !== 'undefined') {
+            Object.assign($context, value);
         }
     }
 }
 
-export function ENV() {
+export function ENV(): Env {
     return {
         isQX,
         isLoon,
@@ -283,156 +278,95 @@ export function ENV() {
     };
 }
 
-export function HTTP(defaultOptions = { baseURL: '' }) {
-    const { isQX, isLoon, isSurge, isNode, isGUIforCores } = ENV();
-    const methods = [
-        'GET',
-        'POST',
-        'PUT',
-        'DELETE',
-        'HEAD',
-        'OPTIONS',
-        'PATCH',
-    ];
-    const URL_REGEX =
-        /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/;
+export function HTTP(defaultOptions: HTTPOptions = { baseURL: '' }): HTTPClient {
+    const env = ENV();
+    const URL_REGEX = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/;
 
-    function send(method, options) {
-        options = typeof options === 'string' ? { url: options } : options;
-        const baseURL = defaultOptions.baseURL;
-        if (baseURL && !URL_REGEX.test(options.url || '')) {
-            options.url = baseURL ? baseURL + options.url : options.url;
+    async function send(method: HTTPMethod, options: HTTPOptions | string): Promise<HTTPResponse> {
+        let opts: HTTPOptions = typeof options === 'string' ? { url: options } : { ...options };
+        
+        // Merge base URL
+        if (defaultOptions.baseURL && !URL_REGEX.test(opts.url)) {
+            opts.url = defaultOptions.baseURL + opts.url;
         }
-        options = { ...defaultOptions, ...options };
-        const timeout = options.timeout;
+        opts = { ...defaultOptions, ...opts };
+
         const events = {
-            ...{
-                onRequest: () => {},
-                onResponse: (resp) => resp,
-                onTimeout: () => {},
-            },
-            ...options.events,
+            onRequest: () => {},
+            onResponse: (resp: HTTPResponse) => resp,
+            onTimeout: () => {},
+            ...opts.events,
         };
 
-        events.onRequest(method, options);
+        events.onRequest(method, opts);
 
-        if (options.node) {
-            // Surge & Loon allow connecting to a server using a specified proxy node
-            if (isSurge) {
-                const build = $environment['surge-build'];
-                if (build && parseInt(build) >= 2407) {
-                    options['policy-descriptor'] = options.node;
-                    delete options.node;
-                }
+        // Handle node proxy
+        if (opts.node && env.isSurge) {
+            const build = $environment?.['surge-build'];
+            if (build && parseInt(build) >= 2407) {
+                (opts as any)['policy-descriptor'] = opts.node;
+                delete opts.node;
             }
         }
 
-        let worker;
-        if (isQX) {
-            worker = $task.fetch({
-                method,
-                url: options.url,
-                headers: options.headers,
-                body: options.body,
-                opts: options.opts,
-            });
-        } else if (isLoon || isSurge || isNode) {
+        let worker: Promise<HTTPResponse>;
+        if (env.isQX) {
+            worker = $task.fetch({ method, ...opts });
+        } else if (env.isLoon || env.isSurge || env.isNode) {
             worker = new Promise((resolve, reject) => {
-                const request = isNode
-                    ? eval("require('request')")
-                    : $httpClient;
-                const body = options.body;
-                const opts = JSON.parse(JSON.stringify(options));
-                opts.body = body;
-
-                if (!isNode && opts.timeout) {
-                    opts.timeout++;
-                    let unit = 'ms';
-                    // 这些客户端单位为 s
-                    if (isSurge || isStash || isShadowRocket) {
-                        opts.timeout = Math.ceil(opts.timeout / 1000);
-                        unit = 's';
-                    }
-                    // Loon 为 ms
-                    // console.log(`[httpClient timeout] ${opts.timeout}${unit}`);
-                }
-                request[method.toLowerCase()](opts, (err, response, body) => {
-                    // if (err) {
-                    //     console.log(err);
-                    // } else {
-                    //     console.log({
-                    //         statusCode:
-                    //             response.status || response.statusCode,
-                    //         headers: response.headers,
-                    //         body,
-                    //     });
-                    // }
-
+                const request = env.isNode ? eval("require('request')") : $httpClient;
+                request[method.toLowerCase()](opts, (err: any, response: any, body: string) => {
                     if (err) reject(err);
-                    else
-                        resolve({
-                            statusCode: response.status || response.statusCode,
-                            headers: response.headers,
-                            body,
-                        });
+                    else resolve({
+                        statusCode: response.status || response.statusCode,
+                        headers: response.headers,
+                        body
+                    });
                 });
             });
-        } else if (isGUIforCores) {
-            worker = new Promise(async (resolve, reject) => {
-                try {
-                    const response = await $Plugins.Requests({
-                        method,
-                        url: options.url,
-                        headers: options.headers,
-                        body: options.body,
-                        options: {
-                            Proxy: options.proxy,
-                            Timeout: options.timeout
-                                ? options.timeout / 1000
-                                : 15,
-                        },
-                    });
-                    resolve({
-                        statusCode: response.status,
-                        headers: response.headers,
-                        body: response.body,
-                    });
-                } catch (error) {
-                    reject(error);
+        } else if (env.isGUIforCores) {
+            worker = $Plugins.Requests({
+                method,
+                url: opts.url,
+                headers: opts.headers,
+                body: opts.body,
+                options: {
+                    Proxy: (opts as any).proxy,
+                    Timeout: opts.timeout ? opts.timeout / 1000 : 15
                 }
-            });
+            }).then((resp: any) => ({
+                statusCode: resp.status,
+                headers: resp.headers,
+                body: resp.body
+            }));
+        } else {
+            throw new Error('Unsupported environment');
         }
 
-        let timeoutid;
+        // Handle timeout
+        if (opts.timeout) {
+            const timeout = opts.timeout;
+            const timeoutPromise = new Promise<never>((_, reject) => 
+                setTimeout(() => {
+                    events.onTimeout();
+                    reject(`${method} ${opts.url} timeout after ${timeout}ms`);
+                }, timeout)
+            );
+            return Promise.race([worker, timeoutPromise]).finally(() => 
+                clearTimeout(timeoutPromise as unknown as NodeJS.Timeout)
+            );
+        }
 
-        const timer = timeout
-            ? new Promise((_, reject) => {
-                  //   console.log(`[request timeout] ${timeout}ms`);
-                  timeoutid = setTimeout(() => {
-                      events.onTimeout();
-                      return reject(
-                          `${method} URL: ${options.url} exceeds the timeout ${timeout} ms`,
-                      );
-                  }, timeout);
-              })
-            : null;
-
-        return (
-            timer
-                ? Promise.race([timer, worker]).then((res) => {
-                      if (typeof clearTimeout !== 'undefined') {
-                          clearTimeout(timeoutid);
-                      }
-                      return res;
-                  })
-                : worker
-        ).then((resp) => events.onResponse(resp));
+        return worker.then(events.onResponse);
     }
 
-    const http = {};
-    methods.forEach(
-        (method) =>
-            (http[method.toLowerCase()] = (options) => send(method, options)),
-    );
-    return http;
+    return {
+        get: (options) => send('GET', options),
+        post: (options) => send('POST', options),
+        put: (options) => send('PUT', options),
+        delete: (options) => send('DELETE', options),
+        head: (options) => send('HEAD', options),
+        options: (options) => send('OPTIONS', options),
+        patch: (options) => send('PATCH', options),
+    };
 }
